@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Custom
+data/outputs/*
+!data/outputs/.git
+data/external/*
+!data/external/.git
