@@ -46,7 +46,7 @@ station_addresses = station_names + ", Dublin, Ireland"
 ... so can filter out non-Dublin results
 
 ```python
-!wget -o data/external/dublin_boundary.geojson https://zenodo.org/record/4432494/files/dublin_boundary.geojson 
+!wget -q -O data/external/dublin_boundary.geojson https://zenodo.org/record/4432494/files/dublin_boundary.geojson 
 ```
 
 ```python
