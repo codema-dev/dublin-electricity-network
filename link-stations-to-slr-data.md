@@ -18,52 +18,40 @@ import geopandas as gpd
 import pandas as pd
 ```
 
+# Load data
+
 ```python
 station_locations = gpd.read_file(
-    "data/dublin-stations-nominatim.geojson",
+    "data/outputs/dublin-stations-nominatim.geojson",
     driver="GeoJSON",
 )
 ```
 
 ```python
 station_slr = (
-    pd.read_excel("data/dublin-station-slr.xlsx", engine="openpyxl")
-    .assign(station_name=lambda x: x.station_name.ffill())
-    .rename(columns={"station_name": "station"})
+    pd.read_excel("data/raw/dublin-station-slr.xlsx", engine="openpyxl")
 )
 ```
 
+# Link station totals to station coordinates
+
 ```python
-station_totals = station_slr.groupby("station", as_index=False).sum()
+station_totals = station_slr.query("station.notnull()")
+# station_totals.to_excel("data/dublin-station-slr-totals.xlsx", engine="openpyxl")
 ```
 
 ```python
-stations = station_locations.merge(station_totals)
+station_totals_by_location =  station_totals.groupby("station", as_index=False).sum()
 ```
 
 ```python
-stations.to_file("data/dublin-station-slr-totals.geojson", driver="GeoJSON")
-```
-
-```python
-stations.drop(columns="geometry").to_excel("data/dublin-station-slr-totals.xlsx", engine="openpyxl")
-```
-
-```python
-stations
+stations = station_locations.merge(station_totals_by_location)
 ```
 
 ```python
 stations.plot()
 ```
 
-# Customer Stations
-
 ```python
-mask = station_slr["capacity_feeder_customer"].fillna("").astype(str).str.contains("Customer")
-customer_stations = station_slr[mask]
-```
-
-```python
-customer_stations
+stations.to_file("data/dublin-station-slr-totals.geojson", driver="GeoJSON")
 ```

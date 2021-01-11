@@ -50,7 +50,7 @@ station_addresses = station_names + ", Dublin, Ireland"
 ```
 
 ```python
-dublin_boundary = gpd.read_file("data/dublin_boundary.geojson", driver="GeoJSON")["geometry"]
+dublin_boundary = gpd.read_file("data/dublin_boundary.geojson", driver="GeoJSON").geometry
 ```
 
 # Geocode stations
@@ -69,31 +69,16 @@ raw_station_locations = station_locations.join(station_names)
 ```
 
 ```python
-station_locations = gpd.sjoin(raw_station_locations, dublin_boundary).drop(columns=["index_right"])
-```
-
-```python
 display("Percentage located within Dublin: " + get_percentage(station_locations, raw_station_locations) + "%") 
 ```
 
 ```python
-station_locations
+stations = gpd.sjoin(raw_station_locations, dublin_boundary).drop(columns=["index_right"])
 ```
 
 ```python
-station_locations = gpd.read_file(
-    "data/dublin-stations-nominatim.geojson",
-    driver="GeoJSON",
-)
-```
-
-```python
-station_locations.drop(columns=["COUNTY"])
-```
-
-```python
-station_locations.to_file(
-    "data/dublin-stations-nominatim.geojson",
+stations.to_file(
+    "data/outputs/dublin-stations-nominatim.geojson",
     driver="GeoJSON",
 )
 ```
