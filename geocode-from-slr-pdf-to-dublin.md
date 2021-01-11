@@ -30,7 +30,7 @@ def get_percentage(left, right):
 
 ```python
 station_names = pd.read_csv(
-    "data/dublin-station-names.txt",
+    "data/raw/dublin-station-names.txt",
     header=None,
     names=["station"],
     squeeze=True
@@ -44,6 +44,10 @@ station_addresses = station_names + ", Dublin, Ireland"
 # Get Dublin Boundary
 
 ... so can filter out non-Dublin results
+
+```python
+!wget -o data/external/dublin_boundary.geojson https://zenodo.org/record/4432494/files/dublin_boundary.geojson 
+```
 
 ```python
 dublin_boundary = gpd.read_file("data/dublin_boundary.geojson", driver="GeoJSON")["geometry"]
