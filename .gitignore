@@ -133,3 +133,4 @@ data/outputs/*
 !data/outputs/.git
 data/external/*
 !data/external/.git
+*.ipynb
