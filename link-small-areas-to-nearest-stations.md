@@ -25,7 +25,7 @@ from sklearn.neighbors import BallTree
 
 ```python
 station_totals = (
-    gpd.read_file("data/dublin-station-slr-totals.geojson", driver="GeoJSON")
+    gpd.read_file("data/outputs/dublin-station-slr-totals.geojson", driver="GeoJSON")
     .to_crs(epsg=2157) # convert to ITM
 )
 ```
@@ -61,6 +61,23 @@ small_areas = (
 small_areas
 ```
 
+# Get Small Area demands
+
+... <span style="color:red">**Not yet publicly released**</span>.
+
+```python
+small_area_demand = (
+    gpd.read_file("data/external/small_area_residential_demand.geojson", driver="GeoJSON")
+    .to_crs(epsg=2157) # convert to ITM
+    .loc[:, ["GEOGID", "sa_demand"]]
+    .rename(columns={"GEOGID": "SMALL_AREA"})
+)
+```
+
+```python
+small_area_demand
+```
+
 # Link Small Areas to nearest station 
 
 
@@ -81,19 +98,12 @@ small_areas["y"] = small_areas.geometry.centroid.y
 ```
 
 ```python
-# Create a BallTree 
 tree = BallTree(station_totals[['x', 'y']].values, leaf_size=2)
 
-# Query the BallTree on each feature from 'appart' to find the distance
-# to the nearest 'pharma' and its id
 small_areas['distance_nearest'], small_areas['id_nearest'] = tree.query(
-    small_areas[['x', 'y']].values, # The input array for the query
+    small_areas[['x', 'y']].values,
     k=1, # The number of nearest neighbors
 )
-```
-
-```python
-small_areas
 ```
 
 ```python
@@ -106,7 +116,7 @@ small_area_stations = pd.merge(
 ```
 
 ```python
-small_areas_with_stations = small_areas.merge(small_area_stations)
+small_areas_with_stations = small_areas.merge(small_area_stations).loc[:, ["SMALL_AREA", "station", "geometry"]]
 ```
 
 ```python
@@ -121,4 +131,31 @@ station_totals.plot(
     ax=base,
     color='k',
 )
+```
+
+# Link small area demands to stations
+
+```python
+small_area_demands_with_stations = small_areas_with_stations.merge(small_area_demand)
+```
+
+```python
+demand_at_stations = small_area_demands_with_stations.groupby("station").sum() / 10**6
+```
+
+```python
+demand_at_stations
+```
+
+```python
+stations_with_demands = pd.merge(
+    demand_at_stations,
+    station_totals,
+    left_index=True,
+    right_on="station"
+)
+```
+
+```python
+stations_with_demands.to_csv("data/outputs/station_demands.csv", index=False)
 ```
