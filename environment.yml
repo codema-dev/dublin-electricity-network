@@ -1,0 +1,13 @@
+name: substations
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - notebook
+  - geopandas
+  - descartes
+  - matplotlib
+  - geopy
+  - jupytext
+  - openpyxl
+  - scikit-learn
