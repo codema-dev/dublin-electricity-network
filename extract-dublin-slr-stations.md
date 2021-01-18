@@ -25,7 +25,7 @@ import numpy as np
 
 ```python
 dublin_station_names = (
-    pd.read_csv("~/Data/dublin-substation-names.csv")
+    pd.read_excel("data/external/dublin-substation-names.xlsx", engine="openpyxl")
     .assign(slr_station=lambda df: df.slr_station.fillna(df.station)) # replace finglas/mcdermott etc with mesh: orange etc
     .slr_station
     .rename("station")
@@ -36,8 +36,12 @@ dublin_station_names = (
 # Get Ireland Station Special Load Readings (SLR)
 
 ```python
+!wget -O data/external/slr-2019-20.xlsx https://zenodo.org/record/4446588/files/slr-2019-20.xlsx
+```
+
+```python
 ireland_slr = (
-    pd.read_csv("~/Data/slr-2019-20.csv")
+    pd.read_excel("data/external/slr-2019-20.xlsx", engine="openpyxl")
     .assign(total=lambda df: df.station.notnull())
     .assign(station=lambda df: df.station.str.lower().ffill())
 )
@@ -46,7 +50,7 @@ ireland_slr = (
 # Get Dublin station locations
 
 ```python
-dublin_station_locations = gpd.read_file("/home/wsl-rowanm/Data/dublin-stations-google.geojson", driver="GeoJSON")
+dublin_station_locations = gpd.read_file("data/outputs/dublin-stations-google.geojson", driver="GeoJSON")
 ```
 
 # Extract SLR Dublin stations
@@ -100,9 +104,9 @@ dublin_slr_totals_geolocated = dublin_station_locations.merge(dublin_slr_totals)
 # Save
 
 ```python
-dublin_slr_totals_geolocated.to_file("/home/wsl-rowanm/Data/dublin-stations-slr-totals.geojson", driver="GeoJSON")
+dublin_slr_totals_geolocated.to_file("data/outputs/dublin-stations-slr-totals.geojson", driver="GeoJSON")
 ```
 
 ```python
-dublin_slr_totals_geolocated.to_csv("/home/wsl-rowanm/Data/dublin-stations-slr-totals.csv")
+dublin_slr_totals_geolocated.to_csv("data/outputs/dublin-stations-slr-totals.csv")
 ```

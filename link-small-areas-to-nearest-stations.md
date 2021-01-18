@@ -25,17 +25,9 @@ from sklearn.neighbors import BallTree
 
 ```python
 station_totals = (
-    gpd.read_file("data/outputs/dublin-station-slr-totals.geojson", driver="GeoJSON")
+    gpd.read_file("data/outputs/dublin-stations-slr-totals.geojson", driver="GeoJSON")
     .to_crs(epsg=2157) # convert to ITM
 )
-```
-
-```python
-station_totals
-```
-
-```python
-station_totals.plot()
 ```
 
 # Get Dublin Small Area Boundaries
@@ -45,7 +37,7 @@ station_totals.plot()
 ```
 
 ```python
-!echo "y" unzip data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip -d data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp
+!unzip data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip -d data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp
 ```
 
 ```python
@@ -55,27 +47,6 @@ small_areas = (
     .loc[:, ["SMALL_AREA", "COUNTYNAME", "geometry"]]
     .to_crs(epsg=2157) # convert to ITM
 )
-```
-
-```python
-small_areas
-```
-
-# Get Small Area demands
-
-... <span style="color:red">**Not yet publicly released**</span>.
-
-```python
-small_area_demand = (
-    gpd.read_file("data/external/small_area_residential_demand.geojson", driver="GeoJSON")
-    .to_crs(epsg=2157) # convert to ITM
-    .loc[:, ["GEOGID", "sa_demand"]]
-    .rename(columns={"GEOGID": "SMALL_AREA"})
-)
-```
-
-```python
-small_area_demand
 ```
 
 # Link Small Areas to nearest station 
@@ -90,14 +61,9 @@ Also see:
 ```python
 station_totals["x"] = station_totals.geometry.x
 station_totals["y"] = station_totals.geometry.y
-```
-
-```python
 small_areas["x"] = small_areas.geometry.centroid.x
 small_areas["y"] = small_areas.geometry.centroid.y
-```
 
-```python
 tree = BallTree(station_totals[['x', 'y']].values, leaf_size=2)
 
 small_areas['distance_nearest'], small_areas['id_nearest'] = tree.query(
@@ -120,6 +86,10 @@ small_areas_with_stations = small_areas.merge(small_area_stations).loc[:, ["SMAL
 ```
 
 ```python
+small_areas_with_stations
+```
+
+```python
 base = small_areas_with_stations.plot(
     column="station", 
     legend=True,
@@ -131,31 +101,4 @@ station_totals.plot(
     ax=base,
     color='k',
 )
-```
-
-# Link small area demands to stations
-
-```python
-small_area_demands_with_stations = small_areas_with_stations.merge(small_area_demand)
-```
-
-```python
-demand_at_stations = small_area_demands_with_stations.groupby("station").sum() / 10**6
-```
-
-```python
-demand_at_stations
-```
-
-```python
-stations_with_demands = pd.merge(
-    demand_at_stations,
-    station_totals,
-    left_index=True,
-    right_on="station"
-)
-```
-
-```python
-stations_with_demands.to_csv("data/outputs/station_demands.csv", index=False)
 ```

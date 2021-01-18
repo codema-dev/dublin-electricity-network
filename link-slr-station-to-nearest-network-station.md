@@ -25,13 +25,30 @@ from sklearn.neighbors import BallTree
 # Get LA boundaries
 
 ```python
+!wget -O data/external/dublin_admin_county_boundaries.zip https://zenodo.org/record/4446778/files/dublin_admin_county_boundaries.zip
+```
+
+```python
+!unzip -d data/external data/external/dublin_admin_county_boundaries.zip 
+```
+
+```python
 dublin_admin_county_boundaries = (
-    gpd.read_file("/home/wsl-rowanm/Data/dublin_admin_county_boundaries")
+    gpd.read_file("data/external/dublin_admin_county_boundaries")
     .to_crs(epsg=2157) # read & convert to ITM or epsg=2157
 )
 ```
 
-# Get MV Network
+# Get Network data
+
+
+Must be downloaded from the Codema Google Shared Drive or <span style="color:red">**requested from the ESB**</span>
+
+```python
+network_data = "/home/wsl-rowanm/Data/dublin-electricity-network/"
+```
+
+## Get MV Network
 
 
 - 10
@@ -59,9 +76,7 @@ dublin_admin_county_boundaries = (
 ... from ESB Networks Data Style Mappings v1.1
 
 ```python
-lvmv_network = gpd.read_parquet(
-    "/home/wsl-rowanm/Data/dublin-electricity-network/dublin_lvmv_network.parquet",
-)
+lvmv_network = gpd.read_parquet(f"{network_data}/dublin_lvmv_network.parquet")
 ```
 
 ```python
@@ -81,15 +96,13 @@ base = dublin_admin_county_boundaries.boundary.plot(edgecolor='red', figsize=(25
 mv_network_lines.plot(ax=base, markersize=0.1)
 ```
 
-# Get 38kV, 110kV & 220kV  stations
+## Get 38kV, 110kV & 220kV  stations
 
 ... there is no 400kV station in Dublin
 
 ```python
 hv_network = (
-    gpd.read_parquet(
-        "/home/wsl-rowanm/Data/dublin-electricity-network/dublin_hv_network.parquet",
-    )
+    gpd.read_parquet(f"{network_data}/dublin_hv_network.parquet")
     .to_crs(epsg=2157)
 )
 ```
@@ -109,7 +122,7 @@ hv_stations = (
 ```python
 slr_stations = (
     gpd.read_file(
-        "/home/wsl-rowanm/Data/dublin-stations-slr-totals.geojson",
+        "data/outputs/dublin-stations-slr-totals.geojson",
         driver="GeoJSON",
     )
     .to_crs(epsg=2157)

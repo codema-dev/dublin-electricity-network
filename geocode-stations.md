@@ -27,7 +27,7 @@ def get_percentage(left, right):
 # Get Dublin stations
 
 ```python
-!wget -q -O data/external/dublin-substation-names.xlsx https://zenodo.org/record/4446622/files/dublin-substation-names.xlsx
+!wget -O data/external/dublin-substation-names.xlsx https://zenodo.org/record/4446622/files/dublin-substation-names.xlsx
 ```
 
 ```python
@@ -46,7 +46,7 @@ dublin_station_addresses = dublin_station_names["town"] + ", Dublin, Ireland"
 ... so can filter out failed non-Dublin results
 
 ```python
-!wget -q -O data/external/dublin_boundary.geojson https://zenodo.org/record/4432494/files/dublin_boundary.geojson 
+!wget -O data/external/dublin_boundary.geojson https://zenodo.org/record/4432494/files/dublin_boundary.geojson 
 ```
 
 ```python
