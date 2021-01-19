@@ -135,3 +135,4 @@ data/external/*
 !data/external/.gitkeep
 *.ipynb
 api_keys.txt
+cache/
