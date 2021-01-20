@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 import momepy
 import networkx as nx
 import osmnx as ox
+from sklearn.neighbors import BallTree
 from tqdm import tqdm
 ```
 
@@ -178,133 +179,90 @@ Inspired by:
 - https://autogis-site.readthedocs.io/en/latest/notebooks/L6/network-analysis.html#shortest-path-analysis
 
 ```python
-def euclidean_dist_vec(y1, x1, y2, x2):
+def sklearn_get_nearest_nodes(G, points):
     """
-    Calculate Euclidean distances between points (from osmnx).
+    Find the nearest node to each point.
 
-    Vectorized function to calculate the Euclidean distance between two
-    points' coordinates or between arrays of points' coordinates. For most
-    accurate results, use projected coordinates rather than decimal degrees.
-
-    Parameters
-    ----------
-    y1 : float or np.array of float
-        first point's y coordinate
-    x1 : float or np.array of float
-        first point's x coordinate
-    y2 : float or np.array of float
-        second point's y coordinate
-    x2 : float or np.array of float
-        second point's x coordinate
-
-    Returns
-    -------
-    dist : float or np.array of float
-        distance or array of distances from (x1, y1) to (x2, y2) in
-        coordinates' units
-    """
-    # Pythagorean theorem
-    dist = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
-    return dist
-```
-
-```python
-def get_nearest_node(G, point):
-    """
-    Find the nearest node to a point (Adapted from osmnx).
-    
-    Return the graph node nearest to some (lat, lng) or (y, x) point and
-    optionally the distance between the node and the point. This function can
-    use either the haversine formula or Euclidean distance.
-    
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    point : tuple
-        The (lat, lng) or (y, x) point for which we will find the nearest node
-        in the graph
+    points : pandas.DataFrame
+        The points for which we will find the nearest node in the graph
 
     Returns
     -------
     int or tuple of (int, float)
-        Nearest node ID or optionally a tuple of (node ID, dist), where dist
-        is the distance (in meters if haversine, or graph node coordinate
-        units if euclidean) between the point and nearest node
+        Nearest node ID
+    
+    Adapted from
+    ------------
+    https://stackoverflow.com/questions/58893719/find-nearest-point-in-other-dataframe-with-a-lot-of-data
     """
     # dump graph node coordinates into a pandas dataframe with x and y columns
     coords = (d[0] for d in G.nodes(data=True))
-    df = pd.DataFrame(coords, columns=["x", "y"])
+    target = pd.DataFrame(coords, columns=["x", "y"])
     
-    # add columns to df for the (constant) coordinates of reference point
-    df["ref_y"] = point[0]
-    df["ref_x"] = point[1]
-    
-    # calculate distances using euclid's formula for projected geometries
-    dists = euclidean_dist_vec(y1=df["ref_y"], x1=df["ref_x"], y2=df["y"], x2=df["x"])
-    
-    # nearest node's ID is the index label of the minimum distance
-    index = dists.idxmin()
-    
-    return (df.iloc[index].x, df.iloc[index].y)
+    tree = BallTree(target[['x', 'y']].values, leaf_size=2)
+
+    points['distance_nearest'], points['id_nearest'] = tree.query(
+        points[['x', 'y']].values,
+        k=1, # The number of nearest neighbors
+    )
+    target_ids = points['id_nearest']
+    target_coords = target.iloc[target_ids]
+    return [tuple(x) for x in target_coords.to_numpy()] 
 ```
 
 ```python
-small_area_centroids = gpd.GeoDataFrame(small_areas.geometry.centroid, columns=["geometry"])
+orig_points = pd.DataFrame(
+    {
+        "x": small_areas.geometry.centroid.x,
+        "y": small_areas.geometry.centroid.y,
+    }
+)
 ```
 
 ```python
-orig_points = [(row.geometry.y, row.geometry.x) for row in small_area_centroids.itertuples()]
+target_points = pd.DataFrame(
+    {
+        "x": network_stations_38kv.geometry.x,
+        "y": network_stations_38kv.geometry.y,
+    }
+)
 ```
 
 ```python
-target_points = [(row.geometry.y, row.geometry.x) for row in network_stations_38kv.itertuples()]
+orig_nodes = sklearn_get_nearest_node(Gs, orig_points)
 ```
 
 ```python
-orig_nodes = [get_nearest_node(Gs, orig_point) for orig_point in tqdm(orig_points)]
+target_nodes = sklearn_get_nearest_node(Gs, target_points)
 ```
 
 ```python
-with open("orig_nodes.txt", "w") as f:
-    for orig_node in orig_nodes:
-        f.write(str(orig_node) +"\n")
+paths = [
+    nx.multi_source_dijkstra(Gs, sources=target_nodes, target=(orig_node))
+    for orig_node in tqdm(orig_nodes)
+]
 ```
 
 ```python
-target_nodes = [get_nearest_node(Gs, target_point) for target_point in tqdm(target_points)]
+paths
+```
+
+# Plot shortest paths
+
+```python
+
 ```
 
 ```python
-orig_nodes
+
 ```
 
 ```python
-with open("target_nodes.txt", "w") as f:
-    for target_node in target_nodes:
-        f.write(str(target_node) +"\n")
-```
 
-```python
-[orig_nodes[0]]
-```
-
-```python
-nearest_nodes = []
-for orig_node in tqdm([orig_nodes[0]]):
-    shortest_distance = np.inf
-    for target_node in target_nodes:
-        distance = nx.shortest_path_length(Gs, source=orig_node, target=target_node, weight='length')
-        print(distance, end=" ")
-        if distance < shortest_distance:
-            nearest_node = target_node
-            shortest_distance = distance
-    print(f"\nshortest_distance: {shortest_distance}")
-    nearest_nodes.append(nearest_node)
-```
-
-```python
-nearest_nodes
 ```
 
 # Roughwork 
@@ -330,5 +288,41 @@ while not solved:
 ```
 
 ```python
-!conda update -y notebook
+with open("orig_nodes.txt", "w") as f:
+    for orig_node in orig_nodes:
+        f.write(str(orig_node) +"\n")
+```
+
+```python
+nearest_nodes = []
+for orig_node in tqdm([orig_nodes[0]]):
+    shortest_distance = np.inf
+    for target_node in target_nodes:
+        distance = nx.shortest_path_length(Gs, source=orig_node, target=target_node, weight='length')
+        print(distance, end=" ")
+        if distance < shortest_distance:
+            nearest_node = target_node
+            shortest_distance = distance
+    print(f"\nshortest_distance: {shortest_distance}")
+    nearest_nodes.append(nearest_node)
+```
+
+```python
+orig_nodes_df = pd.DataFrame(orig_nodes)
+```
+
+```python
+orig_nodes_gdf = gpd.GeoDataFrame(
+    geometry=gpd.points_from_xy(
+        x=orig_nodes_df[0],
+        y=orig_nodes_df[1],
+        crs="epsg:2157",
+    )
+)
+```
+
+```python
+base = dublin_admin_county_boundaries.boundary.plot(edgecolor='red', figsize=(25,25))
+small_areas.plot(ax=base)
+orig_nodes_gdf.plot(ax=base, markersize=20, color="r")
 ```
