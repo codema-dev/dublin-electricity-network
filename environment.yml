@@ -19,7 +19,7 @@ dependencies:
   - poetry
   - black
   
-  # - pip
-  # - pip:
-  #   - git+https://github.com/codema-dev/dublin-electricity-substations
+  - pip
+  - pip:
+    - git+https://github.com/codema-dev/dublin-electricity-substations
 
