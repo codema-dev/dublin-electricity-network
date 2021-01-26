@@ -36,13 +36,13 @@ from des.plot import plot_paths_to_files
 
 ```python
 # --no-clobber skip downloads that would download to existing files
-!wget --no-clobber -O data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip https://opendata.arcgis.com/datasets/c85e610da1464178a2cd84a88020c8e2_3.zip
-!unzip data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip -d data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp
+!wget --no-clobber -O ../data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip https://opendata.arcgis.com/datasets/c85e610da1464178a2cd84a88020c8e2_3.zip
+!unzip ../data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip -d ../data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp
 ```
 
 ```python
 small_areas = (
-    gpd.read_file("data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp")
+    gpd.read_file("../data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp")
     .query("`COUNTYNAME` == ['South Dublin', 'Dún Laoghaire-Rathdown', 'Fingal', 'Dublin City']")
     .loc[:, ["SMALL_AREA", "COUNTYNAME", "geometry"]]
     .to_crs(epsg=2157) # convert to ITM
@@ -53,13 +53,13 @@ small_areas = (
 
 ```python
 # --no-clobber skip downloads that would download to existing files
-!wget --no-clobber -O data/external/dublin_admin_county_boundaries.zip https://zenodo.org/record/4446778/files/dublin_admin_county_boundaries.zip
-!unzip -d data/external data/external/dublin_admin_county_boundaries.zip 
+!wget --no-clobber -O ../data/external/dublin_admin_county_boundaries.zip https://zenodo.org/record/4446778/files/dublin_admin_county_boundaries.zip
+!unzip -d ../data/external ../data/external/dublin_admin_county_boundaries.zip 
 ```
 
 ```python
 dublin_admin_county_boundaries = (
-    gpd.read_file("data/external/dublin_admin_county_boundaries")
+    gpd.read_file("../data/external/dublin_admin_county_boundaries")
     .to_crs(epsg=2157) # read & convert to ITM or epsg=2157
 )
 ```
@@ -186,7 +186,7 @@ G_top = nx.compose_all(G.subgraph(component) for component in tqdm(largest_compo
 ```
 
 ```python
-with open('data/interim/G_top.pkl', 'wb') as fp:
+with open('../data/interim/G_top.pkl', 'wb') as fp:
     pickle.dump(G_top, fp)
 ```
 
@@ -227,7 +227,7 @@ paths = get_network_paths_between_points(
 ```
 
 ```python
-with open('data/interim/paths.pkl', 'wb') as fp:
+with open('../data/interim/paths.pkl', 'wb') as fp:
     pickle.dump(paths, fp)
 ```
 
@@ -251,6 +251,6 @@ plot_paths_to_files(
     orig_points=orig_points,
     dest_points=dest_points,
     boundaries=dublin_admin_county_boundaries.boundary,
-    dirpath="data/outputs/sa-centroids-to-38kv-stations-via-mv-network",
+    dirpath="../data/outputs/sa-centroids-to-38kv-stations-via-mv-network",
 )
 ```

@@ -27,12 +27,12 @@ def get_percentage(left, right):
 # Get Dublin stations
 
 ```python
-!wget -O data/external/dublin-substation-names.xlsx https://zenodo.org/record/4446622/files/dublin-substation-names.xlsx
+!wget -O ../data/external/dublin-substation-names.xlsx https://zenodo.org/record/4446622/files/dublin-substation-names.xlsx
 ```
 
 ```python
 dublin_station_names = pd.read_excel(
-    "data/external/dublin-substation-names.xlsx",
+    "../data/external/dublin-substation-names.xlsx",
     engine="openpyxl",
 )
 ```
@@ -46,11 +46,11 @@ dublin_station_addresses = dublin_station_names["town"] + ", Dublin, Ireland"
 ... so can filter out failed non-Dublin results
 
 ```python
-!wget -O data/external/dublin_boundary.geojson https://zenodo.org/record/4432494/files/dublin_boundary.geojson 
+!wget -O ../data/external/dublin_boundary.geojson https://zenodo.org/record/4432494/files/dublin_boundary.geojson 
 ```
 
 ```python
-dublin_boundary = gpd.read_file("data/external/dublin_boundary.geojson", driver="GeoJSON")[["geometry"]]
+dublin_boundary = gpd.read_file("../data/external/dublin_boundary.geojson", driver="GeoJSON")[["geometry"]]
 ```
 
 # Geocode stations
@@ -104,7 +104,7 @@ incorrectly_geocoded_results
 
 ```python
 dublin_station_locations.to_file(
-    "data/outputs/dublin-stations-google.geojson",
+    "../data/outputs/dublin-stations-google.geojson",
     driver="GeoJSON",
 )
 ```

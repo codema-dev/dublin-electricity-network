@@ -25,16 +25,16 @@ from sklearn.neighbors import BallTree
 # Get LA boundaries
 
 ```python
-!wget -O data/external/dublin_admin_county_boundaries.zip https://zenodo.org/record/4446778/files/dublin_admin_county_boundaries.zip
+!wget -O ../data/external/dublin_admin_county_boundaries.zip https://zenodo.org/record/4446778/files/dublin_admin_county_boundaries.zip
 ```
 
 ```python
-!unzip -d data/external data/external/dublin_admin_county_boundaries.zip 
+!unzip -d ../data/external ../data/external/dublin_admin_county_boundaries.zip 
 ```
 
 ```python
 dublin_admin_county_boundaries = (
-    gpd.read_file("data/external/dublin_admin_county_boundaries")
+    gpd.read_file("../data/external/dublin_admin_county_boundaries")
     .to_crs(epsg=2157) # read & convert to ITM or epsg=2157
 )
 ```
@@ -122,7 +122,7 @@ hv_stations = (
 ```python
 slr_stations = (
     gpd.read_file(
-        "data/outputs/dublin-stations-slr-totals.geojson",
+        "../data/outputs/dublin-stations-slr-totals.geojson",
         driver="GeoJSON",
     )
     .to_crs(epsg=2157)

@@ -25,7 +25,7 @@ from sklearn.neighbors import BallTree
 
 ```python
 station_totals = (
-    gpd.read_file("data/outputs/dublin-stations-slr-totals.geojson", driver="GeoJSON")
+    gpd.read_file("../data/outputs/dublin-stations-slr-totals.geojson", driver="GeoJSON")
     .to_crs(epsg=2157) # convert to ITM
 )
 ```
@@ -33,13 +33,13 @@ station_totals = (
 # Get Dublin Small Area Boundaries
 
 ```bash
-wget -O data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip https://opendata.arcgis.com/datasets/c85e610da1464178a2cd84a88020c8e2_3.zip
-unzip data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip -d data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp
+wget -O ../data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip https://opendata.arcgis.com/datasets/c85e610da1464178a2cd84a88020c8e2_3.zip
+unzip ../data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip -d ../data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp
 ```
 
 ```python
 small_areas = (
-    gpd.read_file("data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp")
+    gpd.read_file("../data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp")
     .query("`COUNTYNAME` == ['South Dublin', 'Dún Laoghaire-Rathdown', 'Fingal', 'Dublin City']")
     .loc[:, ["SMALL_AREA", "COUNTYNAME", "geometry"]]
     .to_crs(epsg=2157) # convert to ITM
