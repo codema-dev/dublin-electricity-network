@@ -1,13 +1,25 @@
-name: substations
+name: des
+
 channels:
   - conda-forge
   - defaults
+
 dependencies:
-  - notebook
   - geopandas
+  - pandas
+  - momepy
+  - scikit-learn
+  - tqdm
   - descartes
   - matplotlib
   - geopy
+  
+  - notebook
   - jupytext
-  - openpyxl
-  - scikit-learn
+  - poetry
+  - black
+  
+  # - pip
+  # - pip:
+  #   - git+https://github.com/codema-dev/dublin-electricity-substations
+
