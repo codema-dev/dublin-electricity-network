@@ -89,3 +89,28 @@ def plot_heatmap_vs_capacitymap(heatmap, capacitymap, boundaries):
     plt.legend(["heatmap", "capacitymap"], prop={"size": 100})
 
     return f
+
+
+def plot_small_areas_linked_to_stations(small_areas, stations):
+
+    f, ax = plt.subplots(figsize=(100, 100))
+
+    small_areas.plot(ax=ax, column="station_name", cmap="binary")
+    stations.plot(
+        ax=ax,
+        color="teal",
+        markersize=5000,
+    )
+    stations.apply(
+        lambda gdf: ax.annotate(
+            text=gdf["station_name"],
+            xy=gdf.geometry.centroid.coords[0],
+            ha="center",
+            fontsize=12,
+            color="black",
+            path_effects=[pe.withStroke(linewidth=2, foreground="white")],
+        ),
+        axis=1,
+    )
+
+    return f
