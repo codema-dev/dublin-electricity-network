@@ -114,3 +114,30 @@ def plot_small_areas_linked_to_stations(small_areas, stations):
     )
 
     return f
+
+
+def plot_cad_stations_vs_heatmap_stations(cad_stations, heatmap_stations, boundaries):
+
+    f, ax = plt.subplots(figsize=(100, 100))
+    boundaries.plot(ax=ax, facecolor="orange", edgecolor="teal")
+
+    heatmap_stations.plot(
+        ax=ax,
+        color="teal",
+        markersize=2000,
+    )
+    heatmap_stations.apply(
+        lambda gdf: ax.annotate(
+            text=gdf["station_name"],
+            xy=gdf.geometry.centroid.coords[0],
+            ha="center",
+            fontsize=12,
+            color="black",
+            path_effects=[pe.withStroke(linewidth=2, foreground="white")],
+        ),
+        axis=1,
+    )
+
+    cad_stations.plot(ax=ax, markersize=100, color="black")
+
+    return f
