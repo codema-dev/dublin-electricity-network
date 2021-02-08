@@ -1,5 +1,9 @@
+import gc
 import os
 
+from dask.diagnostics import ProgressBar
+from dask import compute
+from dask import delayed
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -23,12 +27,14 @@ def plot_gdf_vs_nx(G, gdf, boundaries):
 
 
 def plot_path_n(G, paths, orig_points, dest_points, boundaries, n):
-    positions = {z: [z[0], z[1]] for z in list(G.nodes)}
-    x, y = zip(*paths[n][1])
-
     f, ax = plt.subplots(figsize=(30, 30))
-    boundaries.plot(edgecolor="red", ax=ax)
+
+    boundaries.plot(edgecolor="red", facecolor="none", ax=ax)
+
+    positions = {z: [z[0], z[1]] for z in list(G.nodes)}
     nx.draw(G, positions, node_size=5, ax=ax)
+
+    x, y = zip(*paths[n][1])
     ax.plot(x, y, c="k", lw=20, alpha=0.5)
     ax.scatter(orig_points.iloc[n].x, orig_points.iloc[n].y, color="green", s=500)
     ax.scatter(x[0], y[0], color="red", s=500)
@@ -36,23 +42,64 @@ def plot_path_n(G, paths, orig_points, dest_points, boundaries, n):
     ax.scatter(dest_points.x, dest_points.y, color="k", s=250)
 
 
+def plot_graph(G, ax):
+
+    positions = {z: [z[0], z[1]] for z in list(G.nodes)}
+    nx.draw(G, positions, node_size=5, ax=ax)
+
+
 def plot_paths_to_files(G, paths, orig_points, dest_points, boundaries, dirpath):
-    os.mkdir(dirpath)
+    assert os.path.exists(dirpath)
+
     for n in tqdm(range(len(paths))):
-        positions = {z: [z[0], z[1]] for z in list(G.nodes)}
+
         x, y = zip(*paths[n][1])
 
         f, ax = plt.subplots(figsize=(30, 30))
+
         boundaries.plot(edgecolor="red", ax=ax)
-        nx.draw(G, positions, node_size=5, ax=ax)
+        plot_graph(G, ax)
         ax.plot(x, y, c="k", lw=20, alpha=0.5)
 
         ax.scatter(orig_points.iloc[n].x, orig_points.iloc[n].y, color="green", s=500)
         ax.scatter(x[0], y[0], color="red", s=500)
         ax.scatter(x[-1], y[-1], color="green", s=500)
         ax.scatter(dest_points.x, dest_points.y, color="k", s=250)
+
         f.savefig(f"{dirpath}/{n}.png")
-        plt.close()
+        f.clf()
+        plt.close(f)
+
+
+def plot_paths_to_files_delayed(
+    G, paths, orig_points, dest_points, boundaries, dirpath
+):
+    assert os.path.exists(dirpath)
+
+    figures = []
+    for n in tqdm(range(len(paths))):
+
+        f, ax = plt.subplots(figsize=(30, 30))
+
+        delayed(boundaries.plot)(edgecolor="red", ax=ax)
+
+        delayed(plot_graph)(G, ax)
+
+        x, y = zip(*paths[n][1])
+        delayed(ax.plot)(x, y, c="k", lw=20, alpha=0.5)
+        delayed(ax.scatter)(
+            orig_points.iloc[n].x, orig_points.iloc[n].y, color="green", s=500
+        )
+        delayed(ax.scatter)(x[0], y[0], color="red", s=500)
+        delayed(ax.scatter)(x[-1], y[-1], color="green", s=500)
+        delayed(ax.scatter)(dest_points.x, dest_points.y, color="k", s=250)
+
+        figures.append(delayed(f.savefig)(f"{dirpath}/{n}.png"))
+        delayed(f.clf())
+        delayed(plt.close(f))
+
+    with ProgressBar():
+        compute(*figures)
 
 
 def plot_heatmap_vs_capacitymap(heatmap, capacitymap, boundaries):
