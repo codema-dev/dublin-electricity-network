@@ -16,7 +16,8 @@
 # +
 import geopandas as gpd
 
-import des
+from des import io
+from des import join
 # -
 
 data_dir = "../data"
@@ -35,7 +36,7 @@ data_dir = "../data"
 #     {data_dir}/external/dublin_admin_county_boundaries.zip 
 # -
 
-dublin_admin_county_boundaries = des.io.read_dublin_admin_county_boundaries(
+dublin_admin_county_boundaries = io.read_dublin_admin_county_boundaries(
     f"{data_dir}/external/dublin_admin_county_boundaries"
 )
 
@@ -57,35 +58,27 @@ cad_stations = (
 
 # # Get Map stations
 
-heatmap_raw = des.io.read_heatmap(f"{data_dir}/external/heatmap-download-version-nov-2020.xlsx")
-heatmap_clean = des.clean.clean_heatmap(heatmap_raw)
-heatmap_gdf = des.convert.convert_to_gdf_via_lat_long(heatmap_clean)
+heatmap_ireland = io.read_heatmap(f"{data_dir}/external/heatmap-download-version-nov-2020.xlsx")
 heatmap_dublin =  gpd.sjoin(
-    heatmap_gdf,
+    heatmap_ireland,
     dublin_admin_county_boundaries,
     op="within",
-)
+).drop(columns="index_right")
 heatmap_dublin_hv = heatmap_dublin.query("station_name != 'mv/lv'")
 
-capacitymap_raw = io.read_capacitymap(f"{data_dir}/external/MapDetailsDemand.xlsx")
-capacitymap_clean = clean.clean_capacitymap(capacitymap_raw)
-capacitymap_gdf = convert.convert_to_gdf_via_lat_long(capacitymap_clean)
+capacitymap_ireland = io.read_capacitymap(f"{data_dir}/external/MapDetailsDemand.xlsx")
 capacitymap_dublin = gpd.sjoin(
-    capacitymap_gdf,
+    capacitymap_ireland,
     dublin_admin_county_boundaries,
     op="within",
-)
+).drop(columns="index_right")
 capacitymap_dublin_hv = capacitymap_dublin.query("station_name != 'mv/lv'")
 
 # ## Link stations to nearest geocoded station
 
-cad_stations_linked_to_heatmap = gpd.GeoDataFrame(
-    join.join_nearest_points(cad_stations, heatmap_dublin_hv)
-).drop(columns="index_right").assign(station_id=lambda gdf: gdf.index)
+cad_stations_linked_to_heatmap = join.join_nearest_points(cad_stations, heatmap_dublin_hv)
 
-cad_stations_linked_to_capacitymap = gpd.GeoDataFrame(
-    join.join_nearest_points(cad_stations, capacitymap_dublin_hv)
-).drop(columns="index_right").assign(station_id=lambda gdf: gdf.index)
+cad_stations_linked_to_capacitymap = join.join_nearest_points(cad_stations, capacitymap_dublin_hv)
 
 # # Plot CAD stations vs Heatmap stations
 #
