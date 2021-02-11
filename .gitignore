@@ -138,3 +138,4 @@ data/external/*
 *.ipynb
 api_keys.txt
 cache/
+.vscode
