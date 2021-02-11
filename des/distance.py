@@ -8,38 +8,6 @@ from sklearn.neighbors import BallTree
 from tqdm import tqdm
 
 
-def euclidean_dist_vec(y1, x1, y2, x2):
-    """
-    Calculate Euclidean distances between points.
-
-    Vectorized function to calculate the Euclidean distance between two
-    points' coordinates or between arrays of points' coordinates. For most
-    accurate results, use projected coordinates rather than decimal degrees.
-
-    Parameters
-    ----------
-    y1 : float or np.array of float
-        first point's y coordinate
-    x1 : float or np.array of float
-        first point's x coordinate
-    y2 : float or np.array of float
-        second point's y coordinate
-    x2 : float or np.array of float
-        second point's x coordinate
-
-    Returns
-    -------
-    dist : float or np.array of float
-        distance or array of distances from (x1, y1) to (x2, y2) in
-        coordinates' units
-
-    Copied from
-    -----------
-    https://github.com/gboeing/osmnx/blob/master/osmnx/distance.py
-    """
-    return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5  # Pythagorean theorem
-
-
 def get_nearest_node(G, point):
     """
     Find the nearest node to a point.
@@ -97,10 +65,14 @@ def get_nearest_nodes(G, points):
     target = pd.DataFrame(coords, columns=["x", "y"])
     tree = BallTree(target[["x", "y"]].values, leaf_size=2)
 
+    points_x = points.geometry.x
+    points_y = points.geometry.y
+    points_xy = pd.concat([points_x, points_y], axis="columns").to_numpy()
     points["distance_nearest"], points["id_nearest"] = tree.query(
-        points[["x", "y"]].values,
+        points_xy,
         k=1,  # The number of nearest neighbors
     )
+
     target_ids = points["id_nearest"]
     target_coords = target.iloc[target_ids]
     return [tuple(x) for x in target_coords.to_numpy()]
@@ -156,7 +128,7 @@ def remove_subgraph(G, S, orig_node):
     return G.remove_nodes_from(list(Gs.nodes()))
 
 
-def get_network_paths_between_points(G, orig, dest):
+def get_network_paths_between_points(G, orig_points, dest_points):
     """
     Find the nearest dest to each orig.
 
@@ -164,9 +136,9 @@ def get_network_paths_between_points(G, orig, dest):
     ----------
     G : networkx.MultiDiGraph
         input graph
-    orig : pandas.DataFrame
+    orig_points : geopandas.GeoDataFrame
         The points for which we will find the nearest dest_point
-    dest : pandas.DataFrame
+    dest_points : geopandas.GeoDataFrame
         The points to be compared to orig_points
 
     Returns
@@ -178,18 +150,6 @@ def get_network_paths_between_points(G, orig, dest):
     ------------
     https://stackoverflow.com/questions/63690631/osmnx-shortest-path-how-to-skip-node-if-not-reachable-and-take-the-next-neares/63713539#63713539
     """
-    orig_points = pd.DataFrame(
-        {
-            "x": orig.geometry.centroid.x,
-            "y": orig.geometry.centroid.y,
-        }
-    )
-    dest_points = pd.DataFrame(
-        {
-            "x": dest.geometry.x,
-            "y": dest.geometry.y,
-        }
-    )
     paths = []
     target_nodes = delayed(get_nearest_nodes)(G, dest_points)
     for orig_point in orig_points.itertuples():
