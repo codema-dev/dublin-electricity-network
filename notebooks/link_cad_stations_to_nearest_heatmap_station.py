@@ -16,30 +16,27 @@
 # +
 import geopandas as gpd
 
-from des import io
-from des import clean
-from des import convert
-from des import extract
-from des import join
-from des import plot
+import des
 # -
+
+data_dir = "../data"
 
 # # Get LA boundaries
 
 # +
 # --no-clobber skips downloading unless a new version exists
 # !wget --no-clobber \
-#     -O ../data/external/dublin_admin_county_boundaries.zip \
+#     -O {data_dir}/external/dublin_admin_county_boundaries.zip \
 #     https://zenodo.org/record/4446778/files/dublin_admin_county_boundaries.zip
 
-# -o forces overwriting
-# !unzip -o \
-#     -d ../data/external \
-#     ../data/external/dublin_admin_county_boundaries.zip 
+# -n skips overwriting
+# !unzip -n \
+#     -d {data_dir}/external \
+#     {data_dir}/external/dublin_admin_county_boundaries.zip 
 # -
 
-dublin_admin_county_boundaries = io.read_dublin_admin_county_boundaries(
-    "../data/external/dublin_admin_county_boundaries"
+dublin_admin_county_boundaries = des.io.read_dublin_admin_county_boundaries(
+    f"{data_dir}/external/dublin_admin_county_boundaries"
 )
 
 # # Get 38kV, 110kV & 220kV stations from CAD data
@@ -58,38 +55,94 @@ cad_stations = (
     .drop(columns=["COUNTY", "index_right", "level_1"])
 )
 
-# # Get heatmap stations
+# # Get Map stations
 
-heatmap_raw = io.read_heatmap("../data/external/heatmap-download-version-nov-2020.xlsx")
-heatmap_clean = clean.clean_heatmap(heatmap_raw)
-heatmap_gdf = convert.convert_to_gdf_via_lat_long(heatmap_clean)
-heatmap_dublin = extract.extract_polygon(
+heatmap_raw = des.io.read_heatmap(f"{data_dir}/external/heatmap-download-version-nov-2020.xlsx")
+heatmap_clean = des.clean.clean_heatmap(heatmap_raw)
+heatmap_gdf = des.convert.convert_to_gdf_via_lat_long(heatmap_clean)
+heatmap_dublin =  gpd.sjoin(
     heatmap_gdf,
-    dublin_admin_county_boundaries
+    dublin_admin_county_boundaries,
+    op="within",
 )
 heatmap_dublin_hv = heatmap_dublin.query("station_name != 'mv/lv'")
+
+capacitymap_raw = io.read_capacitymap(f"{data_dir}/external/MapDetailsDemand.xlsx")
+capacitymap_clean = clean.clean_capacitymap(capacitymap_raw)
+capacitymap_gdf = convert.convert_to_gdf_via_lat_long(capacitymap_clean)
+capacitymap_dublin = gpd.sjoin(
+    capacitymap_gdf,
+    dublin_admin_county_boundaries,
+    op="within",
+)
+capacitymap_dublin_hv = capacitymap_dublin.query("station_name != 'mv/lv'")
+
+# ## Link stations to nearest geocoded station
+
+cad_stations_linked_to_heatmap = gpd.GeoDataFrame(
+    join.join_nearest_points(cad_stations, heatmap_dublin_hv)
+).drop(columns="index_right").assign(station_id=lambda gdf: gdf.index)
+
+cad_stations_linked_to_capacitymap = gpd.GeoDataFrame(
+    join.join_nearest_points(cad_stations, capacitymap_dublin_hv)
+).drop(columns="index_right").assign(station_id=lambda gdf: gdf.index)
 
 # # Plot CAD stations vs Heatmap stations
 #
 # ... Open `png` version of below plot locally (see [save](#save)) to zoom in
 
-fig = plot.plot_cad_stations_vs_heatmap_stations(
-    cad_stations=cad_stations,
-    heatmap_stations=heatmap_dublin_hv,
-    boundaries=dublin_admin_county_boundaries,
-)
+# +
+import matplotlib.patheffects as pe
+import matplotlib.pyplot as plt
 
-# ## Link stations to nearest geocoded station
+f, ax = plt.subplots(figsize=(100, 100))
 
-cad_stations_linked = gpd.GeoDataFrame(
-    join.join_nearest_points(cad_stations, heatmap_dublin_hv)
-)
+dublin_admin_county_boundaries.plot(ax=ax, facecolor="teal", edgecolor="white")
+
+cad_stations_linked_to_heatmap.plot(ax=ax, color="black")
+cad_stations_linked_to_heatmap.apply(
+    lambda x: ax.annotate(
+        text=x["station_name"],
+        xy=x.geometry.centroid.coords[0],
+        ha='center',
+        color="white",
+        path_effects=[pe.withStroke(linewidth=2, foreground="black")],
+    ),
+    axis=1,
+);
+
+heatmap_dublin_hv.plot(ax=ax,color="orange")
+heatmap_dublin_hv.apply(
+    lambda x: ax.annotate(
+        text=x["station_name"],
+        xy=x.geometry.centroid.coords[0],
+        ha='center',
+        color="white",
+        path_effects=[pe.withStroke(linewidth=2, foreground="orange")],
+    ),
+    axis=1,
+);
+
+capacitymap_dublin_hv.plot(ax=ax,color="red")
+capacitymap_dublin_hv.apply(
+    lambda x: ax.annotate(
+        text=x["station_name"],
+        xy=x.geometry.centroid.coords[0],
+        ha='center',
+        color="white",
+        path_effects=[pe.withStroke(linewidth=2, foreground="red")],
+    ),
+    axis=1,
+);
+
+plt.legend(["CAD", "Heat Map", "Capacity Map"], prop={'size': 50});
+# -
 
 # # Save
 
-fig.savefig("../data/outputs/cad-stations-linked-to-nearest-heatmap-station.png")
+f.savefig(f"{data_dir}/outputs/cad-stations-linked-to-nearest-heatmap-station.png")
 
-cad_stations_linked.to_file(
-    "../data/outputs/cad-stations-linked-to-nearest-heatmap-station.geojson",
+cad_stations_linked_to_heatmap.to_file(
+    f"{data_dir}/outputs/cad-stations-linked-to-nearest-heatmap-station.geojson",
     driver="GeoJSON",
 )
