@@ -135,7 +135,6 @@ data/external/*
 !data/external/.gitkeep
 *data/interim/*
 !data/interim/.gitkeep
-*.ipynb
 api_keys.txt
 cache/
 .vscode

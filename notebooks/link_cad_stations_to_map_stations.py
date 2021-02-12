@@ -6,35 +6,39 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.9.1
+#       jupytext_version: 1.10.0
 #   kernelspec:
-#     display_name: Python 3
-#     language: python
+#     display_name: 'Python 3.9.1 64-bit (''des'': conda)'
+#     metadata:
+#       interpreter:
+#         hash: a568a3391fa07a69dd36ed86d7f7005a7e6c42f5000f39f23663d14718557572
 #     name: python3
 # ---
 
 # +
+from os import listdir
+from shutil import unpack_archive
 import geopandas as gpd
 
+from des import download
 from des import io
 from des import join
-# -
 
 data_dir = "../data"
+cad_data = "/home/wsl-rowanm/Data/ESBdata_20200124"
+# -
 
 # # Get LA boundaries
 
-# +
-# --no-clobber skips downloading unless a new version exists
-# !wget --no-clobber \
-#     -O {data_dir}/external/dublin_admin_county_boundaries.zip \
-#     https://zenodo.org/record/4446778/files/dublin_admin_county_boundaries.zip
+download.download(
+    url="https://zenodo.org/record/4446778/files/dublin_admin_county_boundaries.zip",
+    to_filepath=f"{data_dir}/external/dublin_admin_county_boundaries.zip"
+)
+unpack_archive(
+    filename=f"{data_dir}/external/dublin_admin_county_boundaries.zip",
+    extract_dir=f"{data_dir}/external/dublin_admin_county_boundaries",
+)
 
-# -n skips overwriting
-# !unzip -n \
-#     -d {data_dir}/external \
-#     {data_dir}/external/dublin_admin_county_boundaries.zip 
-# -
 
 dublin_admin_county_boundaries = io.read_dublin_admin_county_boundaries(
     f"{data_dir}/external/dublin_admin_county_boundaries"
@@ -46,39 +50,41 @@ dublin_admin_county_boundaries = io.read_dublin_admin_county_boundaries(
 
 # Must be downloaded from the Codema Google Shared Drive or <span style="color:red">**requested from the ESB**</span>
 
-cad_data = "/home/wsl-rowanm/Data/dublin-electricity-network/"
-
-cad_stations = (
-    gpd.read_parquet(f"{cad_data}/dublin_hv_network.parquet")
-    .query("`Level` == [20, 30, 40]")
-    .explode() # un-dissolve station locations from multipoint to single points
-    .reset_index()
-    .drop(columns=["COUNTY", "index_right", "level_1"])
-)
+hv_network_dirpath = f"{cad_data}/Dig Request Style/HV Data"
+hv_network_filepaths = [
+    f"{hv_network_dirpath}/{filename}"
+    for filename in listdir(hv_network_dirpath)
+]
+cad_stations_ireland = io.read_network(hv_network_filepaths, levels=[20,30,40])
+cad_stations_dublin = gpd.sjoin(
+    cad_stations_ireland,
+    dublin_admin_county_boundaries,
+    op="within",
+).drop(columns=["index_right", "COUNTYNAME"])
 
 # # Get Map stations
 
-heatmap_ireland = io.read_heatmap(f"{data_dir}/external/heatmap-download-version-nov-2020.xlsx")
-heatmap_dublin =  gpd.sjoin(
-    heatmap_ireland,
+heatmap_stations_ireland = io.read_heatmap(f"{data_dir}/external/heatmap-download-version-nov-2020.xlsx")
+heatmap_stations_dublin =  gpd.sjoin(
+    heatmap_stations_ireland,
     dublin_admin_county_boundaries,
     op="within",
 ).drop(columns="index_right")
-heatmap_dublin_hv = heatmap_dublin.query("station_name != 'mv/lv'")
+heatmap_stations_dublin_hv = heatmap_stations_dublin.query("station_name != 'mv/lv'")
 
-capacitymap_ireland = io.read_capacitymap(f"{data_dir}/external/MapDetailsDemand.xlsx")
-capacitymap_dublin = gpd.sjoin(
-    capacitymap_ireland,
+capacitymap_stations_ireland = io.read_capacitymap(f"{data_dir}/external/MapDetailsDemand.xlsx")
+capacitymap_stations_dublin = gpd.sjoin(
+    capacitymap_stations_ireland,
     dublin_admin_county_boundaries,
     op="within",
 ).drop(columns="index_right")
-capacitymap_dublin_hv = capacitymap_dublin.query("station_name != 'mv/lv'")
+capacitymap_stations_dublin_hv = capacitymap_stations_dublin.query("station_name != 'mv/lv'")
 
 # ## Link stations to nearest geocoded station
 
-cad_stations_linked_to_heatmap = join.join_nearest_points(cad_stations, heatmap_dublin_hv)
+cad_stations_linked_to_heatmap = join.join_nearest_points(cad_stations_dublin, heatmap_stations_dublin_hv)
 
-cad_stations_linked_to_capacitymap = join.join_nearest_points(cad_stations, capacitymap_dublin_hv)
+cad_stations_linked_to_capacitymap = join.join_nearest_points(cad_stations_dublin, capacitymap_stations_dublin_hv)
 
 # # Plot CAD stations vs Heatmap stations
 #
@@ -104,8 +110,8 @@ cad_stations_linked_to_heatmap.apply(
     axis=1,
 );
 
-heatmap_dublin_hv.plot(ax=ax,color="orange")
-heatmap_dublin_hv.apply(
+heatmap_stations_dublin_hv.plot(ax=ax,color="orange")
+heatmap_stations_dublin_hv.apply(
     lambda x: ax.annotate(
         text=x["station_name"],
         xy=x.geometry.centroid.coords[0],
@@ -116,8 +122,8 @@ heatmap_dublin_hv.apply(
     axis=1,
 );
 
-capacitymap_dublin_hv.plot(ax=ax,color="red")
-capacitymap_dublin_hv.apply(
+capacitymap_stations_dublin_hv.plot(ax=ax,color="red")
+capacitymap_stations_dublin_hv.apply(
     lambda x: ax.annotate(
         text=x["station_name"],
         xy=x.geometry.centroid.coords[0],

@@ -13,13 +13,14 @@ sklearn = "^0.0"
 tqdm = "^4.56.0"
 matplotlib = "^3.3.3"
 pandas = ">=1.1.5"
+notebook = "^6.2.0"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
 jupytext = "^1.9.1"
-notebook = "^6.2.0"
 pre-commit = "^2.10.1"
 flake8 = "^3.8.4"
+jupyter-contrib-nbextensions = "^0.5.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
