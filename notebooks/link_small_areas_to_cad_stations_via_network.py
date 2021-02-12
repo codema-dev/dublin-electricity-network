@@ -45,19 +45,19 @@ show_plots = True
 
 download.download(
     url="https://opendata.arcgis.com/datasets/c85e610da1464178a2cd84a88020c8e2_3.zip",
-    to_filepath=f"{data_dir}/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip",
+    to_filepath=f"{data_dir}/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip",
 )
 unzip.unzip(
-    filename=f"{data_dir}/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip",
-    extract_dir=f"{data_dir}/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp",
+    filename=f"{data_dir}/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip",
+    extract_dir=f"{data_dir}/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp",
 )
 
-small_areas = io.read_dublin_small_areas(f"{data_dir}/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp")
+small_areas = io.read_dublin_small_areas(f"{data_dir}/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp")
 
 # # Get Local Authority boundaries
 
 dublin_admin_county_boundaries = io.read_dublin_admin_county_boundaries(
-    f"{data_dir}/external/dublin_admin_county_boundaries"
+    f"{data_dir}/dublin_admin_county_boundaries"
 )
 
 # # Get MV Network and Get 38kV, 110kV & 220kV  stations
@@ -196,11 +196,6 @@ small_areas_linked_to_stations = pd.concat(
     ]
 ).drop_duplicates(subset="SMALL_AREA")
 
-small_areas_linked_to_stations_via_network.plot(
-    edgecolor="white",
-    facecolor="teal"
-)
-
 if show_plots:
     
     f, ax = plt.subplots(figsize=(120,120))
@@ -272,3 +267,11 @@ if show_plots:
 
     # plt.legend(["Small Area Station IDs", "CAD Stations linked to Heat Map"], prop={'size': 25});
     plt.legend(list(range(5)), prop={'size': 25});
+
+#
+# # Save
+
+small_areas_linked_to_stations.to_file(
+    f"{data_dir}/small-areas-linked-to-map-stations.geojson",
+    driver="GeoJSON",
+)

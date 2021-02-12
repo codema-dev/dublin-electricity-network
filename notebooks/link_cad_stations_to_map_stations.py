@@ -28,20 +28,20 @@ data_dir = "../data"
 cad_data = "/home/wsl-rowanm/Data/ESBdata_20200124"
 # -
 
-# # Get LA boundaries
+# # Get Dublin LA boundaries
 
 download.download(
     url="https://zenodo.org/record/4446778/files/dublin_admin_county_boundaries.zip",
-    to_filepath=f"{data_dir}/external/dublin_admin_county_boundaries.zip"
+    to_filepath=f"{data_dir}/dublin_admin_county_boundaries.zip"
 )
-unpack_archive(
-    filename=f"{data_dir}/external/dublin_admin_county_boundaries.zip",
-    extract_dir=f"{data_dir}/external/dublin_admin_county_boundaries",
+unzip.unzip(
+    filename=f"{data_dir}/dublin_admin_county_boundaries.zip",
+    extract_dir=f"{data_dir}/dublin_admin_county_boundaries",
 )
 
 
 dublin_admin_county_boundaries = io.read_dublin_admin_county_boundaries(
-    f"{data_dir}/external/dublin_admin_county_boundaries"
+    f"{data_dir}/dublin_admin_county_boundaries"
 )
 
 # # Get 38kV, 110kV & 220kV stations from CAD data
@@ -64,7 +64,12 @@ cad_stations_dublin = gpd.sjoin(
 
 # # Get Map stations
 
-heatmap_stations_ireland = io.read_heatmap(f"{data_dir}/external/heatmap-download-version-nov-2020.xlsx")
+download.download(
+    url="https://esbnetworks.ie/docs/default-source/document-download/heatmap-download-version-nov-2020.xlsx",
+    to_filepath=f"{data_dir}/heatmap-download-version-nov-2020.xlsx"
+)
+
+heatmap_stations_ireland = io.read_heatmap(f"{data_dir}/heatmap-download-version-nov-2020.xlsx")
 heatmap_stations_dublin =  gpd.sjoin(
     heatmap_stations_ireland,
     dublin_admin_county_boundaries,
@@ -72,19 +77,9 @@ heatmap_stations_dublin =  gpd.sjoin(
 ).drop(columns="index_right")
 heatmap_stations_dublin_hv = heatmap_stations_dublin.query("station_name != 'mv/lv'")
 
-capacitymap_stations_ireland = io.read_capacitymap(f"{data_dir}/external/MapDetailsDemand.xlsx")
-capacitymap_stations_dublin = gpd.sjoin(
-    capacitymap_stations_ireland,
-    dublin_admin_county_boundaries,
-    op="within",
-).drop(columns="index_right")
-capacitymap_stations_dublin_hv = capacitymap_stations_dublin.query("station_name != 'mv/lv'")
-
 # ## Link stations to nearest geocoded station
 
 cad_stations_linked_to_heatmap = join.join_nearest_points(cad_stations_dublin, heatmap_stations_dublin_hv)
-
-cad_stations_linked_to_capacitymap = join.join_nearest_points(cad_stations_dublin, capacitymap_stations_dublin_hv)
 
 # # Plot CAD stations vs Heatmap stations
 #
@@ -122,26 +117,14 @@ heatmap_stations_dublin_hv.apply(
     axis=1,
 );
 
-capacitymap_stations_dublin_hv.plot(ax=ax,color="red")
-capacitymap_stations_dublin_hv.apply(
-    lambda x: ax.annotate(
-        text=x["station_name"],
-        xy=x.geometry.centroid.coords[0],
-        ha='center',
-        color="white",
-        path_effects=[pe.withStroke(linewidth=2, foreground="red")],
-    ),
-    axis=1,
-);
-
 plt.legend(["CAD", "Heat Map", "Capacity Map"], prop={'size': 50});
 # -
 
 # # Save
 
-f.savefig(f"{data_dir}/outputs/cad-stations-linked-to-nearest-heatmap-station.png")
+f.savefig(f"{data_dir}/cad-stations-linked-to-nearest-heatmap-station.png")
 
 cad_stations_linked_to_heatmap.to_file(
-    f"{data_dir}/outputs/cad-stations-linked-to-nearest-heatmap-station.geojson",
+    f"{data_dir}/cad-stations-linked-to-nearest-heatmap-station.geojson",
     driver="GeoJSON",
 )
