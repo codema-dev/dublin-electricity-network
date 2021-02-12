@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import cKDTree
 
+from des.distance import get_nearest_nodes
+
 
 def join_nearest_points(gdA, gdB):
     nA = np.array(list(gdA.geometry.apply(lambda x: (x.x, x.y))))
@@ -29,3 +31,21 @@ def centroids_within(left, right):
         .merge(left, left_index=True, right_index=True)
         .reset_index(drop=True)
     )
+
+
+def snap_points_to_network(G, points):
+
+    coords = get_nearest_nodes(G, points)
+    coords_df = pd.DataFrame(coords, columns=["x", "y"])
+    snapped_to_g = coords_df.merge(
+        points.drop(columns=["geometry"]),
+        left_index=True,
+        right_index=True,
+    )
+    return gpd.GeoDataFrame(
+        snapped_to_g,
+        geometry=gpd.points_from_xy(
+            snapped_to_g.x,
+            snapped_to_g.y,
+        ),
+    ).drop(columns=["x", "y"])

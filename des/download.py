@@ -22,7 +22,7 @@ class TqdmUpTo(tqdm):
 def download(url, to_filepath):
 
     if path.exists(to_filepath):
-        print(f"Skipping as {to_filepath} already downloaded...")
+        print(f"Skipping as {to_filepath} has already been downloaded...")
     else:
         with TqdmUpTo(
             unit="B",

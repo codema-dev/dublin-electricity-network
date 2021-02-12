@@ -128,45 +128,6 @@ def remove_subgraph(G, S, orig_node):
     return G.remove_nodes_from(list(Gs.nodes()))
 
 
-def get_network_paths_between_points(G, orig_points, dest_points):
-    """
-    Find the nearest dest to each orig.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    orig_points : geopandas.GeoDataFrame
-        The points for which we will find the nearest dest_point
-    dest_points : geopandas.GeoDataFrame
-        The points to be compared to orig_points
-
-    Returns
-    -------
-    list of (tuple of (int, list of (coords))
-        Shortest paths from orig to nearest dest
-
-    Adapted from
-    ------------
-    https://stackoverflow.com/questions/63690631/osmnx-shortest-path-how-to-skip-node-if-not-reachable-and-take-the-next-neares/63713539#63713539
-    """
-    paths = []
-    target_nodes = delayed(get_nearest_nodes)(G, dest_points)
-    for orig_point in orig_points.itertuples():
-        orig_node = delayed(get_nearest_node)(G, (orig_point.x, orig_point.y))
-        path = delayed(nx.multi_source_dijkstra)(
-            G,
-            sources=target_nodes,
-            target=(orig_node),
-        )
-        paths.append(path)
-
-    with ProgressBar():
-        shortest_paths = compute(*paths)
-
-    return shortest_paths
-
-
 def get_largest_subgraph(G):
 
     nodes = max(nx.connected_components(G), key=len)
