@@ -28,13 +28,7 @@ import matplotlib.pyplot as plt
 import momepy
 from shapely.geometry import box
 
-from des import distance
-from des import download
-from des import io
-from des import join
-from des import paths
-from des import plot
-from des import unzip
+import esb
 
 data_dir = "../data"
 cad_data = "/home/wsl-rowanm/Data/ESBdata_20200124"
@@ -43,20 +37,20 @@ show_plots = True
 
 # # Get Small Area boundaries
 
-download.download(
+esb.download(
     url="https://opendata.arcgis.com/datasets/c85e610da1464178a2cd84a88020c8e2_3.zip",
     to_filepath=f"{data_dir}/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip",
 )
-unzip.unzip(
+esb.unzip(
     filename=f"{data_dir}/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp.zip",
     extract_dir=f"{data_dir}/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp",
 )
 
-small_areas = io.read_dublin_small_areas(f"{data_dir}/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp")
+small_areas = esb.read_dublin_small_areas(f"{data_dir}/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp")
 
 # # Get Local Authority boundaries
 
-dublin_admin_county_boundaries = io.read_dublin_admin_county_boundaries(
+dublin_admin_county_boundaries = esb.read_dublin_admin_county_boundaries(
     f"{data_dir}/dublin_admin_county_boundaries"
 )
 
@@ -64,7 +58,7 @@ dublin_admin_county_boundaries = io.read_dublin_admin_county_boundaries(
 #
 # ... there is no 400kV station in Dublin
 
-ireland_mv_index = io.read_mv_index(f"{cad_data}/Ancillary Data/mv_index.dgn")
+ireland_mv_index = esb.read_mv_index(f"{cad_data}/Ancillary Data/mv_index.dgn")
 
 dublin_boundary = gpd.GeoSeries(box(695000, 715000, 740000, 771000)).rename("geometry").to_frame()
 dublin_mv_index = gpd.sjoin(ireland_mv_index, dublin_boundary, op="within")
@@ -72,14 +66,14 @@ dublin_mv_network_filepaths = [
     f"{cad_data}/Dig Request Style/MV-LV Data/{index}.dgn" for index in dublin_mv_index.Text
 ]
 
-mv_network_lines = io.read_network(dublin_mv_network_filepaths, levels=[10, 11, 14]).reset_index(drop=True).explode()
+mv_network_lines = esb.read_network(dublin_mv_network_filepaths, levels=[10, 11, 14]).reset_index(drop=True).explode()
 
 hv_network_filepaths = [
     f"{cad_data}/Dig Request Style/HV Data/{filename}"
     for filename in listdir(f"{cad_data}/Dig Request Style/HV Data/")
 ]
 
-hv_stations_ireland = io.read_network(hv_network_filepaths, levels=[20, 30, 40])
+hv_stations_ireland = esb.read_network(hv_network_filepaths, levels=[20, 30, 40])
 hv_stations_dublin = (
     gpd.sjoin(
         hv_stations_ireland,
@@ -123,7 +117,7 @@ G_largest_edges_buffered = (
     .dissolve()
 )
 
-small_areas_near_g_largest = join.centroids_within(small_areas, G_largest_edges_buffered)
+small_areas_near_g_largest = esb.centroids_within(small_areas, G_largest_edges_buffered)
 
 hv_stations_near_g_largest = gpd.sjoin(
     hv_stations_dublin,
@@ -131,9 +125,9 @@ hv_stations_near_g_largest = gpd.sjoin(
     op="within",
 ).drop(columns="index_right").reset_index(drop=True)
 
-hv_stations_snapped_to_g_largest = join.snap_points_to_network(G_largest, hv_stations_near_g_largest)
+hv_stations_snapped_to_g_largest = esb.snap_points_to_network(G_largest, hv_stations_near_g_largest)
 
-shortest_paths = paths.get_network_paths_between_points(
+shortest_paths = esb.get_network_paths_between_points(
     G=G_largest,
     orig_points=small_areas_near_g_largest,
     dest_points=hv_stations_snapped_to_g_largest,
@@ -167,7 +161,7 @@ if show_plots:
 
 # # Link Small Areas to stations
 
-small_areas_linked_to_stations_via_network = paths.extract_nearest_dest(
+small_areas_linked_to_stations_via_network = esb.extract_nearest_dest(
     shortest_paths,
     small_areas_near_g_largest,
     hv_stations_snapped_to_g_largest
@@ -183,7 +177,7 @@ small_areas_remaining_centroids = gpd.GeoDataFrame(
 )
 
 small_areas_linked_to_stations_via_nearest = (
-    join.join_nearest_points(small_areas_remaining_centroids, hv_stations_dublin)
+    esb.join_nearest_points(small_areas_remaining_centroids, hv_stations_dublin)
     .drop(columns=["geometry", "COUNTYNAME"])
     .merge(small_areas)
     .drop_duplicates(subset="SMALL_AREA")

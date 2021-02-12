@@ -1,4 +1,4 @@
-name: des
+name: esb
 
 channels:
   - conda-forge
