@@ -1,12 +1,5 @@
 repos:
 
-  - repo: https://github.com/mwouts/jupytext
-    rev: v1.10.0  # CURRENT_TAG/COMMIT_HASH
-    hooks:
-    - id: jupytext
-      files: \.ipynb$
-      args: [--sync]
-  
   - repo: local
     hooks:
       - id: jupyter-nb-clear-output
@@ -15,3 +8,10 @@ repos:
         stages: [commit]
         language: system
         entry: jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace  
+
+  - repo: https://github.com/mwouts/jupytext
+    rev: v1.10.0  # CURRENT_TAG/COMMIT_HASH
+    hooks:
+    - id: jupytext
+      files: \.ipynb$
+      args: [--from, ipynb, --to, "py:light"]

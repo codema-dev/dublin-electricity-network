@@ -29,7 +29,7 @@ cad_data = "/home/wsl-rowanm/Data/ESBdata_20200124"
 
 esb.download(
     url="https://zenodo.org/record/4446778/files/dublin_admin_county_boundaries.zip",
-    to_filepath=f"{data_dir}/dublin_admin_county_boundaries.zip"
+    to_filepath=f"{data_dir}/dublin_admin_county_boundaries.zip",
 )
 esb.unzip(
     filename=f"{data_dir}/dublin_admin_county_boundaries.zip",
@@ -49,10 +49,9 @@ dublin_admin_county_boundaries = esb.read_dublin_admin_county_boundaries(
 
 hv_network_dirpath = f"{cad_data}/Dig Request Style/HV Data"
 hv_network_filepaths = [
-    f"{hv_network_dirpath}/{filename}"
-    for filename in listdir(hv_network_dirpath)
+    f"{hv_network_dirpath}/{filename}" for filename in listdir(hv_network_dirpath)
 ]
-cad_stations_ireland = esb.read_network(hv_network_filepaths, levels=[20,30,40])
+cad_stations_ireland = esb.read_network(hv_network_filepaths, levels=[20, 30, 40])
 cad_stations_dublin = gpd.sjoin(
     cad_stations_ireland,
     dublin_admin_county_boundaries,
@@ -63,11 +62,13 @@ cad_stations_dublin = gpd.sjoin(
 
 esb.download(
     url="https://esbnetworks.ie/docs/default-source/document-download/heatmap-download-version-nov-2020.xlsx",
-    to_filepath=f"{data_dir}/heatmap-download-version-nov-2020.xlsx"
+    to_filepath=f"{data_dir}/heatmap-download-version-nov-2020.xlsx",
 )
 
-heatmap_stations_ireland = esb.read_heatmap(f"{data_dir}/heatmap-download-version-nov-2020.xlsx")
-heatmap_stations_dublin =  gpd.sjoin(
+heatmap_stations_ireland = esb.read_heatmap(
+    f"{data_dir}/heatmap-download-version-nov-2020.xlsx"
+)
+heatmap_stations_dublin = gpd.sjoin(
     heatmap_stations_ireland,
     dublin_admin_county_boundaries,
     op="within",
@@ -76,7 +77,9 @@ heatmap_stations_dublin_hv = heatmap_stations_dublin.query("station_name != 'mv/
 
 # ## Link stations to nearest geocoded station
 
-cad_stations_linked_to_heatmap = esb.join_nearest_points(cad_stations_dublin, heatmap_stations_dublin_hv)
+cad_stations_linked_to_heatmap = esb.join_nearest_points(
+    cad_stations_dublin, heatmap_stations_dublin_hv
+)
 
 # # Plot CAD stations vs Heatmap stations
 #
@@ -95,26 +98,26 @@ cad_stations_linked_to_heatmap.apply(
     lambda x: ax.annotate(
         text=x["station_name"],
         xy=x.geometry.centroid.coords[0],
-        ha='center',
+        ha="center",
         color="white",
         path_effects=[pe.withStroke(linewidth=2, foreground="black")],
     ),
     axis=1,
-);
+)
 
-heatmap_stations_dublin_hv.plot(ax=ax,color="orange")
+heatmap_stations_dublin_hv.plot(ax=ax, color="orange")
 heatmap_stations_dublin_hv.apply(
     lambda x: ax.annotate(
         text=x["station_name"],
         xy=x.geometry.centroid.coords[0],
-        ha='center',
+        ha="center",
         color="white",
         path_effects=[pe.withStroke(linewidth=2, foreground="orange")],
     ),
     axis=1,
-);
+)
 
-plt.legend(["CAD", "Heat Map", "Capacity Map"], prop={'size': 50});
+plt.legend(["CAD", "Heat Map", "Capacity Map"], prop={"size": 50})
 # -
 
 # # Save

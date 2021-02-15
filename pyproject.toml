@@ -16,6 +16,7 @@ pandas = ">=1.1.5"
 notebook = "^6.2.0"
 geopandas = "^0.8.2"
 pygeos = "^0.9"
+ipywidgets = "^7.6.3"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
