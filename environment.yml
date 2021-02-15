@@ -5,21 +5,28 @@ channels:
   - defaults
 
 dependencies:
-  - geopandas
-  - pandas
-  - momepy
-  - scikit-learn
-  - tqdm
+  - dask
   - descartes
+  - geopandas
+  - momepy
+  - numpy
+  - networkx
+  - pandas
+  - pygeos
+  - scikit-learn
+  - scipy
+  - shapely
+  - tqdm
   - matplotlib
-  - geopy
   
   - notebook
   - jupytext
+  - ipywidgets
   - poetry
   - black
+  - pre-commit
   
   - pip
   - pip:
-    - git+https://github.com/codema-dev/dublin-electricity-substations
+    - git+https://github.com/codema-dev/esb-network-pylib
 
