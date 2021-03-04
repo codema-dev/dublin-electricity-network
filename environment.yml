@@ -6,27 +6,16 @@ channels:
 
 dependencies:
   - dask
-  - descartes
   - geopandas
+  - matplotlib
   - momepy
-  - numpy
-  - networkx
-  - pandas
+  - openpyxl
   - pygeos
   - scikit-learn
-  - scipy
-  - shapely
-  - tqdm
-  - matplotlib
   
-  - notebook
-  - jupytext
-  - ipywidgets
-  - poetry
   - black
+  - ipykernel
+  - ipywidgets
+  - jupytext
+  - poetry
   - pre-commit
-  
-  - pip
-  - pip:
-    - git+https://github.com/codema-dev/esb-network-pylib
-
