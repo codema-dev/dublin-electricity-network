@@ -5,8 +5,8 @@ import geopandas as gpd
 import networkx as nx
 import pandas as pd
 
-from esb.distance import get_nearest_node
-from esb.distance import get_nearest_nodes
+from dublin_electricity_network.distance import get_nearest_node
+from dublin_electricity_network.distance import get_nearest_nodes
 
 
 def get_network_paths_between_points(G, orig_points, dest_points):
