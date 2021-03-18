@@ -1,10 +1,14 @@
 # %%
+from os import listdir
 from pathlib import Path
 from shutil import unpack_archive
 
-import den
+import geopandas as gpd
+
+import dublin_electricity_network as den
 
 data_dir = Path("../data")
+cad_data = Path("/home/wsl-rowanm/Data/ESBdata_20200124")
 
 # %% [markdown]
 # # Get Dublin Boundary
@@ -83,3 +87,4 @@ cad_stations_dublin = gpd.sjoin(
 ).drop(columns=["index_right", "COUNTYNAME"])
 # %%
 cad_stations_dublin.to_file(data_dir / "cad_stations_dublin.geojson", driver="GeoJSON")
+# %%
