@@ -2,7 +2,7 @@
 name = "dublin-electricity-network"
 version = "0.1.0"
 description = ""
-authors = ["Rowan Molony <rowan.molony@codema.ie>"]
+authors = ["    "]
 license = "MIT"
 
 [tool.poetry.dependencies]
@@ -16,6 +16,7 @@ pygeos = "^0.9"
 ipywidgets = "^7.6.3"
 momepy = "^0.4.2"
 openpyxl = "^3.0.6"
+osmnx = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"

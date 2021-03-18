@@ -7,11 +7,11 @@ channels:
 dependencies:
   - dask
   - geopandas
-  - matplotlib
   - momepy
   - openpyxl
+  - osmnx
   - pygeos
-  - scikit-learn
+  - sklearn
   
   - black
   - ipykernel
