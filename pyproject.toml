@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "esb"
+name = "dublin-electricity-network"
 version = "0.1.0"
 description = ""
 authors = ["Rowan Molony <rowan.molony@codema.ie>"]
