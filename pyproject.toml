@@ -6,7 +6,7 @@ authors = ["    "]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">3.7 || ^3.8"
 dask = {extras = ["delayed"], version = "^2021.1.1"}
 sklearn = "^0.0"
 tqdm = "^4.56.0"
@@ -17,6 +17,7 @@ ipywidgets = "^7.6.3"
 momepy = "^0.4.2"
 openpyxl = "^3.0.6"
 osmnx = "^1.0.1"
+string-grouper = "^0.3.2"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
