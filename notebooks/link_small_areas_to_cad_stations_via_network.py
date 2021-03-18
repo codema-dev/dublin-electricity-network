@@ -7,7 +7,7 @@
 # %%
 # Uncomment if running on Google Colab
 # Click RESTART RUNTIME if prompted
-# !pip install git+https://github.com/codema-dev/esb-network-pylib
+# !pip install git+https://github.com/codema-dev/dublin-electricity-network
 
 # %%
 from os import listdir
@@ -22,7 +22,7 @@ import momepy
 import networkx as nx
 from shapely.geometry import box
 
-import esb
+import dublin_electricity_network as den
 
 data_dir = Path("../data")
 cad_data = Path("/home/wsl-rowanm/Data/ESBdata_20200124")
@@ -36,7 +36,7 @@ small_area_boundaries_filepath = (
     data_dir
     / "Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp"
 )
-esb.download(
+den.download(
     url="https://opendata.arcgis.com/datasets/c85e610da1464178a2cd84a88020c8e2_3.zip",
     to_filepath=str(small_area_boundaries_filepath.with_suffix(".zip")),
 )
@@ -45,13 +45,13 @@ unpack_archive(
     small_area_boundaries_filepath,
 )
 
-small_areas = esb.read_dublin_small_areas(small_area_boundaries_filepath)
+small_areas = den.read_dublin_small_areas(small_area_boundaries_filepath)
 
 # %% [markdown]
 # # Get Local Authority boundaries
 
 # %%
-dublin_admin_county_boundaries = esb.read_dublin_admin_county_boundaries(
+dublin_admin_county_boundaries = den.read_dublin_admin_county_boundaries(
     data_dir / "dublin_admin_county_boundaries"
 )
 
@@ -61,7 +61,7 @@ dublin_admin_county_boundaries = esb.read_dublin_admin_county_boundaries(
 # ... there is no 400kV station in Dublin
 
 # %%
-ireland_mv_index = esb.read_mv_index(cad_data / "Ancillary Data" / "mv_index.dgn")
+ireland_mv_index = den.read_mv_index(cad_data / "Ancillary Data" / "mv_index.dgn")
 
 # %%
 dublin_boundary = (
@@ -74,7 +74,7 @@ dublin_mv_network_filepaths = [
 ]
 
 mv_network_lines = (
-    esb.read_network(dublin_mv_network_filepaths, levels=[10, 11, 14])
+    den.read_network(dublin_mv_network_filepaths, levels=[10, 11, 14])
     .reset_index(drop=True)
     .explode()
 )
@@ -85,7 +85,7 @@ hv_network_filepaths = [
     for filename in listdir(cad_data / "Dig Request Style" / "HV Data")
 ]
 
-hv_stations_ireland = esb.read_network(hv_network_filepaths, levels=[20, 30, 40])
+hv_stations_ireland = den.read_network(hv_network_filepaths, levels=[20, 30, 40])
 hv_stations_dublin = (
     gpd.sjoin(
         hv_stations_ireland,
@@ -120,7 +120,7 @@ if show_plots:
 G = momepy.gdf_to_nx(mv_network_lines, approach="primal")
 
 # %%
-G_largest = esb.get_largest_subgraph(G)
+G_largest = den.get_largest_subgraph(G)
 
 # %%
 G_largest_nodes, G_largest_edges, G_largest_sw = momepy.nx_to_gdf(
@@ -135,7 +135,7 @@ G_largest_edges_buffered = (
 )
 
 # %%
-small_areas_near_g_largest = esb.centroids_within(small_areas, G_largest_edges_buffered)
+small_areas_near_g_largest = den.centroids_within(small_areas, G_largest_edges_buffered)
 
 # %%
 hv_stations_near_g_largest = (
@@ -149,12 +149,12 @@ hv_stations_near_g_largest = (
 )
 
 # %%
-hv_stations_snapped_to_g_largest = esb.snap_points_to_network(
+hv_stations_snapped_to_g_largest = den.snap_points_to_network(
     G_largest, hv_stations_near_g_largest
 )
 
 # %%
-shortest_paths = esb.get_network_paths_between_points(
+shortest_paths = den.get_network_paths_between_points(
     G=G_largest,
     orig_points=small_areas_near_g_largest,
     dest_points=hv_stations_snapped_to_g_largest,
@@ -193,7 +193,7 @@ if show_plots:
 # # Link Small Areas to stations
 
 # %%
-small_areas_linked_to_stations_via_network = esb.extract_nearest_dest(
+small_areas_linked_to_stations_via_network = den.extract_nearest_dest(
     shortest_paths,
     small_areas_near_g_largest,
     hv_stations_snapped_to_g_largest,
@@ -210,7 +210,7 @@ small_areas_remaining_centroids = gpd.GeoDataFrame(
 
 # %%
 small_areas_linked_to_stations_via_nearest = (
-    esb.join_nearest_points(small_areas_remaining_centroids, hv_stations_dublin)
+    den.join_nearest_points(small_areas_remaining_centroids, hv_stations_dublin)
     .drop(columns=["geometry", "COUNTYNAME"])
     .merge(small_areas)
     .drop_duplicates(subset="SMALL_AREA")

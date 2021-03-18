@@ -1,7 +1,7 @@
 # %%
 # Uncomment if running on Google Colab
 # Click RESTART RUNTIME if prompted
-# !pip install git+https://github.com/codema-dev/esb-network-pylib
+# !pip install git+https://github.com/codema-dev/dublin-electricity-network
 
 # %%
 from os import listdir
@@ -12,7 +12,7 @@ import geopandas as gpd
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 
-import esb
+import dublin_electricity_network as den
 
 data_dir = Path("../data")
 cad_data = Path("/home/wsl-rowanm/Data/ESBdata_20200124")
@@ -21,7 +21,7 @@ cad_data = Path("/home/wsl-rowanm/Data/ESBdata_20200124")
 # # Get Dublin LA boundaries
 
 # %%
-esb.download(
+den.download(
     url="https://zenodo.org/record/4446778/files/dublin_admin_county_boundaries.zip",
     to_filepath=str(data_dir / "dublin_admin_county_boundaries.zip"),
 )
@@ -32,7 +32,7 @@ unpack_archive(
 
 
 # %%
-dublin_admin_county_boundaries = esb.read_dublin_admin_county_boundaries(
+dublin_admin_county_boundaries = den.read_dublin_admin_county_boundaries(
     data_dir / "dublin_admin_county_boundaries"
 )
 
@@ -49,7 +49,7 @@ hv_network_dirpath = cad_data / "Dig Request Style" / "HV Data"
 hv_network_filepaths = [
     hv_network_dirpath / filename for filename in listdir(hv_network_dirpath)
 ]
-cad_stations_ireland = esb.read_network(hv_network_filepaths, levels=[20, 30, 40])
+cad_stations_ireland = den.read_network(hv_network_filepaths, levels=[20, 30, 40])
 cad_stations_dublin = gpd.sjoin(
     cad_stations_ireland,
     dublin_admin_county_boundaries,
@@ -61,13 +61,13 @@ cad_stations_dublin = gpd.sjoin(
 # # Get Map stations
 
 # %%
-esb.download(
+den.download(
     url="https://esbnetworks.ie/docs/default-source/document-download/heatmap-download-version-nov-2020.xlsx",
     to_filepath=str(data_dir / "heatmap-download-version-nov-2020.xlsx"),
 )
 
 # %%
-heatmap_stations_ireland = esb.read_heatmap(
+heatmap_stations_ireland = den.read_heatmap(
     data_dir / "heatmap-download-version-nov-2020.xlsx"
 )
 heatmap_stations_dublin = gpd.sjoin(
@@ -81,7 +81,7 @@ heatmap_stations_dublin_hv = heatmap_stations_dublin.query("station_name != 'mv/
 # ## Link stations to nearest geocoded station
 
 # %%
-cad_stations_linked_to_heatmap = esb.join_nearest_points(
+cad_stations_linked_to_heatmap = den.join_nearest_points(
     cad_stations_dublin, heatmap_stations_dublin_hv
 )
 

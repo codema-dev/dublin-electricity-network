@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import cKDTree
 
-from esb.distance import get_nearest_nodes
+from dublin_electricity_network.distance import get_nearest_nodes
 
 
 def join_nearest_points(gdA, gdB):
