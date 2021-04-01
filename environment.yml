@@ -1,4 +1,4 @@
-name: dublin-electricity-network
+name: den
 
 channels:
   - conda-forge
@@ -12,7 +12,7 @@ dependencies:
   - osmnx
   - pygeos
   - seaborn
-  - sklearn 
+  - scikit-learn
   - sparse_dot_topn
   
   - black
@@ -22,5 +22,6 @@ dependencies:
   - poetry
   - pre-commit
 
+  - pip
   - pip:
     - string_grouper
