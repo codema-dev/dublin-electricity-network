@@ -26,7 +26,7 @@ dublin_boundary = gpd.read_file(
 # %%
 esbmap_stations_dublin = (
     gpd.read_file(
-        data_dir / "esbmap_substations_linked_to_osm.geojson",
+        data_dir / "heatmap_stations.geojson",
         driver="GeoJSON",
     )
     .to_crs(epsg=2157)
@@ -64,7 +64,7 @@ coords = (
 )
 
 # %% [markdown]
-# # Cluster Substations via DBSCAN
+# # Cluster Substations via K Nearest Neighbour
 
 # %%
 keep_columns = esbmap_capacity_columns + ["cluster_id", "geometry"]
